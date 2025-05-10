@@ -44,7 +44,6 @@ const handleModelChange = (modelId: string) => {
 <template>
   <div class="min-h-screen flex flex-col">
     <div class="container mx-auto p-4 flex-1 flex flex-col">
-      <h1 class="font-bold text-lg mb-4">Welcome to the homepage</h1>
       <div class="flex-1 flex flex-col">
         <div class="flex-1 overflow-y-auto">
           <ChatHistory :messages="chatHistory" />
