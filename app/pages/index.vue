@@ -1,43 +1,23 @@
 <script setup lang="ts">
-interface ChatMessage {
-  id: number
-  content: string
-  type: 'user' | 'system'
-}
+import { useModels } from '~/composables/useModels'
+import { useChat } from '~/composables/useChat'
 
-const chatHistory = ref<ChatMessage[]>([])
-const selectedModel = ref('gpt-4')
-let messageId = 0
+// Initialize models and chat
+const { models, selectedModel, isLoading, error, fetchModels, setSelectedModel } = useModels()
+const { chatHistory, sendMessage, clearChat } = useChat()
 
-const mockResponses = [
-  "I understand your question. Let me help you with that.",
-  "That's an interesting point. Here's what I think about it.",
-  "I can provide more information on that topic.",
-  "Let me break this down for you.",
-  "Here's a detailed explanation of what you're asking."
-]
+// Fetch models when the page is mounted
+onMounted(() => {
+  fetchModels()
+})
 
 const handleSendMessage = (message: string) => {
-  // Add user message
-  chatHistory.value.push({
-    id: messageId++,
-    content: message,
-    type: 'user'
-  })
-
-  // Add mock system response
-  setTimeout(() => {
-    chatHistory.value.push({
-      id: messageId++,
-      content: mockResponses[Math.floor(Math.random() * mockResponses.length)],
-      type: 'system'
-    })
-  }, 500)
+  sendMessage(message, selectedModel.value)
 }
 
 const handleModelChange = (modelId: string) => {
-  selectedModel.value = modelId
-  // TODO: Handle model change, e.g., clear chat history or show a message
+  setSelectedModel(modelId)
+  clearChat()
 }
 </script>
 
@@ -50,8 +30,12 @@ const handleModelChange = (modelId: string) => {
         </div>
         <div class="sticky bottom-0 bg-white pt-4">
           <ChatInterface 
+            :models="models"
+            :selected-model="selectedModel"
+            :is-loading="isLoading"
+            :error="error"
             @send="handleSendMessage"
-            @model-change="handleModelChange"
+            @update:selected-model="handleModelChange"
           />
         </div>
       </div>
