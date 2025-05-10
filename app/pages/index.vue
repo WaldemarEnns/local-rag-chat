@@ -4,26 +4,49 @@ import { useChat } from '~/composables/useChat'
 import { computed, onMounted } from 'vue'
 
 // Initialize models and chat
-const { models, selectedModel, isLoading, error, fetchModels } = useModels()
-const { sessions, currentSessionId, sendMessage, clearChat, createNewSession } = useChat()
+const { models, selectedModel: modelsSelectedModel, isLoading: isModelsLoading, error: modelsError, fetchModels } = useModels()
+const { 
+  sendMessage, 
+  createNewSession, 
+  getSessionMessages, 
+  isLoading: isChatLoading, 
+  error: chatError,
+  streamingMessage,
+  selectedModel: chatSelectedModel
+} = useChat()
 
-// Fetch models when the page is mounted
-onMounted(() => {
-  fetchModels()
+// Sync model selection between composables
+const selectedModel = computed({
+  get: () => modelsSelectedModel.value,
+  set: (value) => {
+    modelsSelectedModel.value = value;
+    chatSelectedModel.value = value;
+  }
+});
+
+// Initialize chat session when the page is mounted
+onMounted(async () => {
+  await fetchModels()
+  await createNewSession()
 })
 
 const handleSendMessage = (message: string) => {
-  sendMessage(message, selectedModel.value)
+  sendMessage(message)
 }
 
 const handleModelChange = (modelId: string) => {
   selectedModel.value = modelId
-  clearChat()
+  // Create a new session when model changes
   createNewSession()
 }
 
-const currentSession = computed(() => {
-  return sessions.value.find(s => s.id === currentSessionId.value)
+// Get messages for display, including the streaming message if present
+const displayMessages = computed(() => {
+  const messages = getSessionMessages()
+  if (streamingMessage.value) {
+    return [...messages, { role: 'assistant', content: streamingMessage.value, timestamp: Date.now() }]
+  }
+  return messages
 })
 </script>
 
@@ -33,14 +56,13 @@ const currentSession = computed(() => {
       <ChatInterface
         :models="models"
         :selected-model="selectedModel"
-        :is-loading="isLoading"
-        :error="error"
+        :is-loading="isModelsLoading || isChatLoading"
+        :error="modelsError || chatError"
         @send="handleSendMessage"
         @update:selected-model="handleModelChange"
       />
       <ChatHistory
-        v-if="currentSession"
-        :messages="currentSession.messages"
+        :messages="displayMessages"
       />
     </div>
   </div>
