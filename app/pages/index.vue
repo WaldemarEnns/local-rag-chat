@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useModels } from '~/composables/useModels'
 import { useChat } from '~/composables/useChat'
+import { computed, onMounted } from 'vue'
 
 // Initialize models and chat
-const { models, selectedModel, isLoading, error, fetchModels, setSelectedModel } = useModels()
-const { chatHistory, sendMessage, clearChat } = useChat()
+const { models, selectedModel, isLoading, error, fetchModels } = useModels()
+const { sessions, currentSessionId, sendMessage, clearChat, createNewSession } = useChat()
 
 // Fetch models when the page is mounted
 onMounted(() => {
@@ -16,29 +17,31 @@ const handleSendMessage = (message: string) => {
 }
 
 const handleModelChange = (modelId: string) => {
-  setSelectedModel(modelId)
+  selectedModel.value = modelId
   clearChat()
+  createNewSession()
 }
+
+const currentSession = computed(() => {
+  return sessions.value.find(s => s.id === currentSessionId.value)
+})
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
-    <div class="container mx-auto p-4 flex-1 flex flex-col">
-      <div class="flex-1 flex flex-col">
-        <div class="flex-1 overflow-y-auto">
-          <ChatHistory :messages="chatHistory" />
-        </div>
-        <div class="sticky bottom-0 bg-white pt-4">
-          <ChatInterface 
-            :models="models"
-            :selected-model="selectedModel"
-            :is-loading="isLoading"
-            :error="error"
-            @send="handleSendMessage"
-            @update:selected-model="handleModelChange"
-          />
-        </div>
-      </div>
+  <div class="min-h-screen bg-gray-50">
+    <div class="container mx-auto py-8">
+      <ChatInterface
+        :models="models"
+        :selected-model="selectedModel"
+        :is-loading="isLoading"
+        :error="error"
+        @send="handleSendMessage"
+        @update:selected-model="handleModelChange"
+      />
+      <ChatHistory
+        v-if="currentSession"
+        :messages="currentSession.messages"
+      />
     </div>
   </div>
 </template>
