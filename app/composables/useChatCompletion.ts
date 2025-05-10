@@ -13,10 +13,6 @@ export const useChatCompletion = () => {
   ) => {
     isStreaming.value = true;
 
-    console.log('history: ', history)
-    console.log('model: ', model)
-    console.log('message: ', message)
-
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
