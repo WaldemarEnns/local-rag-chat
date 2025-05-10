@@ -1,6 +1,6 @@
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { message, model } = body
+  const { message, model, history = [] } = body
 
   if (!message) {
     throw createError({
@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
       body: JSON.stringify({
         model,
         messages: [
+          ...history,
           {
             role: 'user',
             content: message
