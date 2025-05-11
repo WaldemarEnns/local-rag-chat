@@ -1,8 +1,14 @@
+/**
+ * This composable is responsible for sending messages to the chat completion API and streaming the response.
+ * It also handles the thinking tags and the streaming of the response.
+ */
+
 import { ref } from 'vue';
 import type { ChatMessage } from '~/services/database/database.interface';
 
 export const useChatCompletion = () => {
   const isStreaming = ref(false);
+  const isThinking = ref(false);
 
   const streamChatCompletion = async (
     message: string,
@@ -12,6 +18,7 @@ export const useChatCompletion = () => {
     onError: (error: Error) => void
   ) => {
     isStreaming.value = true;
+    isThinking.value = false;
 
     try {
       const response = await fetch('/api/chat', {
@@ -38,6 +45,9 @@ export const useChatCompletion = () => {
         throw new Error('No response stream available');
       }
 
+      let currentChunk = '';
+      let isInThinkingBlock = false;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -51,7 +61,25 @@ export const useChatCompletion = () => {
             if (data.done) break;
             
             if (data.message?.role === 'assistant' && data.message?.content) {
-              onChunk(data.message.content);
+              const content = data.message.content;
+              
+              // Handle thinking tags
+              if (content.includes('<think>')) {
+                isInThinkingBlock = true;
+                isThinking.value = true;
+                continue;
+              }
+              if (content.includes('</think>')) {
+                isInThinkingBlock = false;
+                isThinking.value = false;
+                continue;
+              }
+
+              // Only accumulate and emit non-thinking content
+              if (!isInThinkingBlock) {
+                currentChunk += content;
+                onChunk(currentChunk);
+              }
             }
           } catch (e) {
             console.error('Error parsing JSON:', e);
@@ -62,11 +90,13 @@ export const useChatCompletion = () => {
       onError(error instanceof Error ? error : new Error('Unknown error occurred'));
     } finally {
       isStreaming.value = false;
+      isThinking.value = false;
     }
   };
 
   return {
     streamChatCompletion,
     isStreaming,
+    isThinking,
   };
 }; 
