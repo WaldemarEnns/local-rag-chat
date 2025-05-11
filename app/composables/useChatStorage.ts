@@ -1,3 +1,8 @@
+/**
+ * This composable is responsible for storing the chat history in the browser's local storage.
+ * It also handles the creation of new sessions and the loading of existing sessions.
+ */
+
 import { ref } from 'vue';
 import type { ChatMessage, ChatSession } from '~/services/database/database.interface';
 import { IndexedDBChatStorage } from '~/services/database/database.service';
