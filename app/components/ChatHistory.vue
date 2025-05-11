@@ -3,14 +3,27 @@ import type { ChatMessage } from '~/composables/useChat'
 
 defineProps<{
   messages: ChatMessage[]
+  isThinking?: boolean
 }>()
 </script>
 
 <template>
-  <div class="overflow-y-auto p-4">
-    <div v-for="msg in messages" :key="msg.id">
-      <UserMessage v-if="msg.role === 'user'" :message="msg.content" />
-      <AssistantMessage v-else :message="msg.content" />
+  <div class="space-y-4 mt-4">
+    <div
+      v-for="message in messages"
+      :key="message.timestamp"
+      class="flex"
+      :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
+    >
+      <UserMessage
+        v-if="message.role === 'user'"
+        :message="message.content"
+      />
+      <AssistantMessage
+        v-else
+        :content="message.content"
+        :is-thinking="isThinking && message === messages[messages.length - 1]"
+      />
     </div>
   </div>
 </template> 
