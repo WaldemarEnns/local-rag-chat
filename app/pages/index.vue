@@ -12,7 +12,8 @@ const {
   isLoading: isChatLoading, 
   error: chatError,
   streamingMessage,
-  selectedModel: chatSelectedModel
+  selectedModel: chatSelectedModel,
+  isThinking
 } = useChat()
 
 // Sync model selection between composables
@@ -63,6 +64,7 @@ const displayMessages = computed(() => {
       />
       <ChatHistory
         :messages="displayMessages"
+        :is-thinking="isThinking"
       />
     </div>
   </div>
