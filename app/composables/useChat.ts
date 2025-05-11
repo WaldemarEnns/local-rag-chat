@@ -1,3 +1,8 @@
+/**
+ * Main composable for the chat, reponsible for sending messages, creating new sessions, and getting the session messages.
+ * Manages the chat history and the selected model.
+ */
+
 import { ref } from 'vue'
 import { useChatStorage } from './useChatStorage'
 import { useChatCompletion } from './useChatCompletion'
@@ -22,7 +27,7 @@ export const useChat = () => {
     createNewSession, 
     getSessionMessages 
   } = useChatStorage()
-  const { streamChatCompletion } = useChatCompletion()
+  const { streamChatCompletion, isThinking } = useChatCompletion()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const streamingMessage = ref('')
@@ -53,11 +58,12 @@ export const useChat = () => {
         history,
         selectedModel.value,
         (chunk: string) => {
-          fullResponse += chunk
-          streamingMessage.value = fullResponse // Update UI with current chunk
+          fullResponse = chunk
+          streamingMessage.value = chunk
         },
         (error: Error) => {
           console.error('Stream error:', error)
+          throw error
         }
       )
 
@@ -82,5 +88,6 @@ export const useChat = () => {
     error,
     streamingMessage, // Expose streaming message for UI
     selectedModel,
+    isThinking,
   }
 } 
