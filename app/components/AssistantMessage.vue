@@ -1,13 +1,17 @@
 <script setup lang="ts">
 defineProps<{
-  message: string
-}>()
+  content: string;
+  isThinking?: boolean;
+}>();
 </script>
 
 <template>
-  <div class="flex justify-start mb-4">
-    <div class="bg-gray-100 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]">
-      {{ message }}
-    </div>
+  <div class="flex flex-col space-y-2">
+    <ChatThinking v-if="isThinking" />
+    <div
+      v-else
+      class="prose prose-sm max-w-none"
+      v-html="content"
+    />
   </div>
 </template> 
